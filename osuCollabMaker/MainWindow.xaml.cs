@@ -22,9 +22,6 @@ using Newtonsoft.Json;
 
 namespace osuCollabMaker;
 
-/// <summary>
-/// Interaction logic for MainWindow.xaml
-/// </summary>
 public partial class MainWindow : Window, INotifyPropertyChanged
 {
     
@@ -121,13 +118,11 @@ public partial class MainWindow : Window, INotifyPropertyChanged
                 Y = Canvas.GetTop(_currentRect)/ImageCanvas.Height*100F,
                 Width = _currentRect.Width/ImageCanvas.Width*100F,
                 Height = _currentRect.Height/ImageCanvas.Height*100F,
-                Name = "新标注",
-                Url = ""
+                Name = "text",
+                Url = "link"
             };
             Selections.Add(selection);
             SelectedSelection = selection;
-            // Selections.Add(selection);
-            Debug.WriteLine("矩形构建！");
             var rect = _currentRect;
             rect.Tag = selection;
             rect.PreviewMouseDown += (o, args) =>
@@ -142,7 +137,6 @@ public partial class MainWindow : Window, INotifyPropertyChanged
                 }
                 if (args.LeftButton != MouseButtonState.Pressed)
                     return;
-                Debug.WriteLine("矩形被点击！");
                 SelectedSelection = rect.Tag as Selection;
             };
             _selectionController.InitSelectionRectangle(rect);
