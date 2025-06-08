@@ -30,6 +30,7 @@ public partial class MainWindow : Window, INotifyPropertyChanged
     private readonly DispatcherTimer _drawTimer;
     private bool _longPress;
     private SelectionRectangleController _selectionController;
+    private bool _isImageLoaded = false;
     
     //选区集合
     public ObservableCollection<Selection> Selections { get; } = new ObservableCollection<Selection>();
@@ -75,21 +76,64 @@ public partial class MainWindow : Window, INotifyPropertyChanged
         }
     }
 
+    private void ClearAll_Click(object sender, RoutedEventArgs e)
+    {
+        ClearAll();
+    }
+    
+    private void ClearAll()
+    {
+        var children = ImageCanvas.Children.OfType<Rectangle>().ToList();
+        
+        foreach (var rectangle in children)
+        {
+            ImageCanvas.Children.Remove(rectangle);
+        }
+        Selections.Clear();
+        
+        SelectedSelection = null;
+    }
+    
     private void LoadImage(string path)
     {
-        var bitmap = new BitmapImage(new Uri(path));
-        MainImage.Source = bitmap;
-        MainImage.Width = bitmap.PixelWidth;
-        MainImage.Height = bitmap.PixelHeight;
-        ImageCanvas.Width = bitmap.PixelWidth;
-        ImageCanvas.Height = bitmap.PixelHeight;
+        ClearAll();
+        
+        try
+        {
+            var bitmap = new BitmapImage(new Uri(path));
+            if (bitmap.PixelWidth <= 0 || bitmap.PixelHeight <= 0)
+            {
+                MessageBox.Show("图片加载失败，可能是无效的图片文件！", "错误", MessageBoxButton.OK, MessageBoxImage.Error);
+                return;
+            }
+            MainImage.Source = bitmap;
+            MainImage.Width = bitmap.PixelWidth;
+            MainImage.Height = bitmap.PixelHeight;
+            ImageCanvas.Width = bitmap.PixelWidth;
+            ImageCanvas.Height = bitmap.PixelHeight;
+            _isImageLoaded = true;
+        }
+        catch (FileNotFoundException)
+        {
+            MessageBox.Show("图片文件不存在！", "错误", MessageBoxButton.OK, MessageBoxImage.Error);
+        }
+        catch (NotSupportedException)
+        {
+            MessageBox.Show("不支持的图片格式！", "错误", MessageBoxButton.OK, MessageBoxImage.Error);
+        }
+        catch (Exception ex)
+        {
+            MessageBox.Show($"加载图片时发生错误：{ex.Message}", "错误", MessageBoxButton.OK, MessageBoxImage.Error);
+        }
     }
     
 
     private void ImageCanvas_MouseDown(object sender, MouseButtonEventArgs e)
     {
+        if (e.LeftButton != MouseButtonState.Pressed)
+            return;
+        if (!_isImageLoaded) return;
         _startPoint = e.GetPosition(ImageCanvas);
-        
         _drawTimer.Start();
     }
 
